@@ -17,6 +17,8 @@ object Test1 {
       println(n)
     }
     
+    o1.drop(2).subscribe(printInt(_), (t: Throwable) => {}, () => println("complete"))
+    
   }
 
 }

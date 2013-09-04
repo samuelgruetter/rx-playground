@@ -1,4 +1,7 @@
 
+/*
+ * These function conversions are only used by the ScalaAdapter, users of RxScala don't need them.
+ */
 object ImplicitFunctionConversions {
     // code below is copied from
     // https://github.com/Netflix/RxJava/blob/master/language-adaptors/rxjava-scala/src/main/scala/rx/lang/scala/RxImplicits.scala
@@ -8,6 +11,15 @@ object ImplicitFunctionConversions {
   
     import rx.observables.BlockingObservable
     import rx.util.functions._
+    
+    /**
+     * Converts a by-name parameter to a Rx Func0
+     */
+    implicit def scalaByNameParamToFunc0[B](param: => B): Func0[B] = 
+        new Func0[B]{
+            def call(): B = param
+        }
+    
     
     /**
      * Converts 0-arg function to Rx Action0
