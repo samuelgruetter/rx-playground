@@ -1,4 +1,5 @@
 
+import scala.collection.JavaConverters._
 import rx.{Observable => JObservable}
 import rx.util.functions.Action1
 import rx.Subscription
@@ -17,17 +18,14 @@ import rx.util.functions.Func2
  */
 object ScalaAdapter {
 
-  object Observable {    
-    // it should be possible to use these conversions implicitly, 
-    // but somehow it does not work and they have to be called explicitly
-    import scala.collection.JavaConversions._
+  object Observable {
     
     def apply[T](args: T*): JObservable[T] = {     
-      JObservable.from(asJavaIterable(args.toIterable))
+      JObservable.from(args.toIterable.asJava)
     }
     
     def apply[T](iterable: Iterable[T]): JObservable[T] = {
-      JObservable.from(asJavaIterable(iterable))
+      JObservable.from(iterable.asJava)
     }
     
     def apply() = {
