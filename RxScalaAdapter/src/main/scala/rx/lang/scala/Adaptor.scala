@@ -198,6 +198,10 @@ object Adaptor {
     def map[R](func: T => R): JObservable[R] = {
       wrapped.map(func)
     }
+    
+    def map2[R](func: T => R): JObservable[R] = {
+      wrapped.map(func)
+    }
 
     def onErrorResumeNext(resumeFunction: Throwable => JObservable[T]): JObservable[T] = {
       wrapped.onErrorResumeNext(resumeFunction)
@@ -498,9 +502,35 @@ class UnitTestSuite extends JUnitSuite {
         // Here we need to convert explicitly!!
         // Otherwise error: "type mismatch; found : Int => Int required: rx.util.functions.Func1[Int,?]"
         
-        ScalaObservable(numbers).map((x: Int) => x * x).subscribe((squareVal: Int) => {
+        // commented lines do not compile, but should
+        
+        // ask Hubert, Eugene
+        // enable logging of implicit resolution
+        // use scala debugger
+        // give map a different name!
+        
+        implicit class ScalaObservableWithMap[T, R](wrapped: rx.Observable[T]) {
+          def map(f: T => R): rx.Observable[R] = {
+            wrapped.map(rx.lang.scala.ImplicitFunctionConversions.scalaFunction1ToRxFunc1(f))
+          }
+        }
+        
+        numbers.reduce((a: Int, b: Int) => a+b)
+        
+        // numbers.groupBy((x: Int) => x % 2)
+        
+        ScalaObservable(numbers).map((x: Int) => x * x)
+        (numbers : ScalaObservable[Int]).map((x: Int) => x * x)
+        
+        // (numbers : ScalaObservable[_]).map((x: Int) => x * x)
+        //numbers.map((x: Int) => x * x)
+        ScalaObservableWithMap(numbers).map((x: Int) => x * x)
+        //numbers.map((x: Int) => x * x)
+        numbers.map2((x: Int) => x * x)
+        
+        /*.subscribe((squareVal: Int) => {
             mappedNumbers.append(squareVal)
-        })
+        })*/
         assertEquals(List(1, 4, 9, 16, 25, 36, 49, 64, 81), mappedNumbers.toList)
     }
     
