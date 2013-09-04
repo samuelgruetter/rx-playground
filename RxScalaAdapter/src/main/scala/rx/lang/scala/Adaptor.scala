@@ -1,9 +1,11 @@
 
+package rx.lang.scala
+
 import scala.collection.JavaConverters._
 import rx.{Observable => JObservable}
 import rx.util.functions.Action1
 import rx.Subscription
-import ImplicitFunctionConversions._
+import rx.lang.scala.ImplicitFunctionConversions._
 import rx.util.BufferClosing
 import rx.util.BufferOpening
 import rx.observables.GroupedObservable
@@ -16,7 +18,8 @@ import rx.util.functions.Func2
  * - once/if RxJava has covariant Observable, make ScalaObservable covariant, too
  * - many TODOs below
  */
-object ScalaAdapter {
+// We have this `object Adaptor` because we cannot define the implicit class ScalaObservable at top level
+object Adaptor {
 
   object Observable {
     
@@ -242,7 +245,7 @@ object ScalaAdapter {
   // Cannot yet have inner class because of this error message:
   // implementation restriction: nested class is not allowed in value class.
   // This restriction is planned to be removed in subsequent releases.  
-  class WithFilter[T](p: T => Boolean, wrapped: rx.Observable[T]) {
+  class WithFilter[T] private[Adaptor] (p: T => Boolean, wrapped: rx.Observable[T]) {
     def map[B](f: T => B): JObservable[B] = wrapped.filter(p).map(f)
     def flatMap[B](f: T => JObservable[B]): JObservable[B] = wrapped.filter(p).flatMap(f)
     def foreach(f: T => Unit): Unit = wrapped.filter(p).toBlockingObservable.forEach(f)
@@ -252,8 +255,6 @@ object ScalaAdapter {
      
 }
 
-// TODO: tests:
-
 /*
 import org.scalatest.junit.JUnitSuite
 
@@ -261,6 +262,7 @@ class UnitTestSuite extends JUnitSuite {
 
 }
 */
+
 
 
 

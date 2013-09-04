@@ -2,6 +2,19 @@
 /*
  * These function conversions are only used by the ScalaAdapter, users of RxScala don't need them.
  */
+package rx.lang.scala
+
+
+import java.{lang => jlang}
+import rx.util.functions.Action0
+import rx.util.functions.Action1
+import rx.util.functions.Func0
+import rx.util.functions.Func1
+import rx.util.functions.Func2
+import rx.util.functions.Func3
+import rx.util.functions.Func4
+import scala.language.implicitConversions
+
 object ImplicitFunctionConversions {
     // code below is copied from
     // https://github.com/Netflix/RxJava/blob/master/language-adaptors/rxjava-scala/src/main/scala/rx/lang/scala/RxImplicits.scala
