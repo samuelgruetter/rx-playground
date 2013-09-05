@@ -9,6 +9,8 @@ package rx.lang.scala
  * - many TODOs below
  */
 
+// compiler crashes, so everything is commented out...
+/*
 object Observable {  
 
   import scala.collection.JavaConverters._
@@ -33,10 +35,7 @@ object Observable {
     new Observable(JObservable.from(iterable.asJava))
   }
   
-  // TODO _ or Nothing, check with covariance
-  def apply(): Observable[_] = {
-    new Observable(JObservable.empty())
-  }
+  // apply() is not needed because it's a special case of apply[T](args: T*)
     
   // TODO: apply() to construct from Scala futures, converting them first to Java futures
   
@@ -44,7 +43,7 @@ object Observable {
     new Observable(JObservable.create(func))
   }
   
-  def apply(exception: Throwable): Observable[_] = {
+  def apply(exception: Throwable): Observable[Nothing] = {
     new Observable(JObservable.error(exception))
   }
   
@@ -90,7 +89,7 @@ object Observable {
   
 }
   
-class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
+class Observable[+T](val wrapped: rx.Observable[_ <: T]) extends AnyVal {
   import scala.collection.JavaConverters._
   import rx.{Observable => JObservable}
   import rx.observables.{BlockingObservable => JBlockingObservable}
@@ -153,7 +152,8 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
   
   // we want zip as an instance method
   def zip[U](that: Observable[U]): Observable[(T, U)] = {
-    new Observable(JObservable.zip(wrapped, that.wrapped, (t: T, u: U) => (t, u)))
+    // new Observable(JObservable.zip(wrapped, that.wrapped, (t: T, u: U) => (t, u))) TODO
+    ???    
   }
   
   
@@ -172,11 +172,13 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
   // Bug link: https://issues.scala-lang.org/browse/SI-6221
   
   def buffer(bufferClosingSelector: () => JObservable[BufferClosing]): Observable[java.util.List[T]] = {
-    new Observable(wrapped.buffer(bufferClosingSelector))
+    //new Observable(wrapped.buffer(bufferClosingSelector)) TODO
+    ???    
   }
   
   def buffer(bufferOpenings: Observable[BufferOpening], bufferClosingSelector: BufferOpening => JObservable[BufferClosing]): Observable[java.util.List[T]] = {
-    new Observable(wrapped.buffer(bufferOpenings.wrapped, bufferClosingSelector))
+    // new Observable(wrapped.buffer(bufferOpenings.wrapped, bufferClosingSelector)) TODO
+    ???
   }
   
   def filter(predicate: T => Boolean): Observable[T] = {
@@ -192,7 +194,8 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
   }
   
   def groupBy[K](keySelector: T => K ): Observable[GroupedObservable[K,T]] = {
-    new Observable(wrapped.groupBy(keySelector))
+    // new Observable(wrapped.groupBy(keySelector)) TODO
+    ???
   }
   
   def groupBy[K,R](keySelector: T => K, elementSelector: T => R ): Observable[GroupedObservable[K,R]] = {
@@ -208,27 +211,33 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
   }
   
   def onErrorResumeNext(resumeFunction: Throwable => Observable[T]): Observable[T] = {
-    new Observable(wrapped.onErrorResumeNext((t: Throwable) => resumeFunction(t).wrapped))
+    // new Observable(wrapped.onErrorResumeNext((t: Throwable) => resumeFunction(t).wrapped))
+    ???
   }
   
   def onErrorResumeNext(resumeObservable: Observable[T]): Observable[T] = {
-    new Observable(wrapped.onErrorResumeNext(resumeObservable.wrapped))
+    // new Observable(wrapped.onErrorResumeNext(resumeObservable.wrapped)) TODO
+    ???
   }
   
   def onErrorReturn(resumeFunction: Throwable => T): Observable[T] = {
-    new Observable(wrapped.onErrorReturn(resumeFunction))
+    // new Observable(wrapped.onErrorReturn(resumeFunction)) TODO
+    ???
   }
   
   def reduce(accumulator: (T, T) => T): Observable[T] = {
-    new Observable(wrapped.reduce(accumulator))
+    // new Observable(wrapped.reduce(accumulator)) TODO
+    ???
   }
   
-  def subscribe(obs: Observer[T]): Subscription = {
-    wrapped.subscribe(obs)
+  def subscribe(obs: Observer[_ >: T]): Subscription = {
+    // wrapped.subscribe(obs) TODO
+    ???
   }
   
-  def subscribe(obs: Observer[T], scheduler: Scheduler): Subscription = {
-    wrapped.subscribe(obs, scheduler)
+  def subscribe(obs: Observer[_ >: T], scheduler: Scheduler): Subscription = {
+    // wrapped.subscribe(obs, scheduler)
+    ???
   }
   
   def subscribe(onNext: T => Unit): Subscription = {
@@ -261,9 +270,9 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
   
   // TODO do we need this? Scala has its own sort functions
   // TODO do we return java.util.List or scala list?
-  def toSortedList(sortFunction: (T, T) => Integer): Observable[java.util.List[T]] = {
+  /*def toSortedList(sortFunction: (T, T) => Integer): Observable[java.util.List[T]] = {
     new Observable(wrapped.toSortedList(sortFunction))
-  }
+  }*/
   
   ////////////// ScalaObservable Section 3 ///////////////////////////////////
   
@@ -304,7 +313,8 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
   // BlockingObservable<T>  toBlockingObservable()
   
   def toBlockingObservable: BlockingObservable[T] = {
-    new BlockingObservable(wrapped.toBlockingObservable())
+    // new BlockingObservable(wrapped.toBlockingObservable()) TODO
+    ???
   }
   
   // Observable<java.util.List<T>>  toList()
@@ -316,12 +326,17 @@ class Observable[T](val wrapped: rx.Observable[T]) extends AnyVal {
 // Cannot yet have inner class because of this error message:
 // implementation restriction: nested class is not allowed in value class.
 // This restriction is planned to be removed in subsequent releases.  
-class WithFilter[T] private[scala] (p: T => Boolean, wrapped: rx.Observable[T]) {
+class WithFilter[+T] private[scala] (p: T => Boolean, wrapped: rx.Observable[_ <: T]) {
   import ImplicitFunctionConversions._
   
   def map[B](f: T => B): Observable[B] = new Observable(wrapped.filter(p).map(f))
-  def flatMap[B](f: T => Observable[B]): Observable[B] = 
-    new Observable(wrapped.filter(p).flatMap((x: T) => f(x).wrapped))
+  def flatMap[B](f: T => Observable[B]): Observable[B] = {
+    val filtered: rx.Observable[_ <: T] = wrapped.filter(p)
+    val func: rx.util.functions.Func1[_ >: T, _ <: rx.Observable[_ <: B]] = (x: T) => f(x).wrapped
+    // TODO only works if Java's flatMap has correct signature
+    //filtered.flatMap(func)
+    ???
+  }
   def foreach(f: T => Unit): Unit = wrapped.filter(p).toBlockingObservable.forEach(f)
   def withFilter(p: T => Boolean): Observable[T] = new Observable(wrapped.filter(p))
 }
@@ -359,6 +374,18 @@ class UnitTestSuite extends JUnitSuite {
   import collection.mutable.ArrayBuffer
   import collection.JavaConverters._
 
+  // Tests which needn't be run:
+  
+  def testSubtyping = {
+    val o1: Observable[Nothing] = Observable()
+    val o2: Observable[Int] = o1
+    val o3: Observable[App] = o1
+    val o4: Observable[Any] = o2
+    val o5: Observable[Any] = o3
+  }
+  
+  // Tests which have to be run:
+  
   @Mock private[this] val observer: Observer[Any] = null
 
   @Mock private[this] val subscription: Subscription = null
@@ -400,8 +427,6 @@ class UnitTestSuite extends JUnitSuite {
   @Test def testSingle {
     assertEquals(1, Observable(1).toBlockingObservable.single)
   }
-
-  def foo(): Observable[_] = Observable()
 
   @Test def testSinglePredicate {
     val found = Observable(1, 2, 3).toBlockingObservable.single(isEven)
@@ -842,4 +867,4 @@ class UnitTestSuite extends JUnitSuite {
 
 }
 
-
+*/
