@@ -1,5 +1,5 @@
 
-import rx.lang.scala.Adaptor._
+import rx.lang.scala._
 
 object Test1 {
 

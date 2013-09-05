@@ -1,4 +1,6 @@
 
+/* CURRENTLY NOT USED */
+
 package rx.lang.scala
 
 /*
@@ -280,7 +282,7 @@ object Adaptor {
 
 import org.scalatest.junit.JUnitSuite
 
-class UnitTestSuite extends JUnitSuite {
+class AdaptorUnitTestSuite extends JUnitSuite {
     import rx.lang.scala.Adaptor._
 
     import org.junit.{ Before, Test }

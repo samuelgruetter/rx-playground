@@ -59,6 +59,14 @@ object ImplicitFunctionConversions {
         }
     
     /**
+     * Converts 2-arg predicate to Rx Func2[A, B, java.lang.Boolean]
+     */
+    implicit def scalaBooleanFunction2ToRxBooleanFunc1[A, B](f: ((A, B) => Boolean)): Func2[A, B, jlang.Boolean] =
+        new Func2[A, B, jlang.Boolean] {
+            def call(a: A, b: B): jlang.Boolean = f(a, b).booleanValue
+        }
+    
+    /**
      * Converts a specific function shape (used in takeWhile) to the equivalent Java types with an Rx Func2
      */
     implicit def convertTakeWhileFuncToRxFunc2[A](f: (A, Int) => Boolean): Func2[A, jlang.Integer, jlang.Boolean] =
