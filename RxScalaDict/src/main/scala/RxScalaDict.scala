@@ -9,12 +9,11 @@ import javax.swing.JTextArea
 import javax.swing.BorderFactory
 import java.awt.BorderLayout
 import javax.swing.JScrollPane
-
 import scala.language.postfixOps
 import scala.concurrent.duration._
-
 import rx.lang.scala.Observable
 import rx.observables.SwingObservable
+import rx.concurrency.SwingScheduler
 
 class Win1 extends JFrame {
   val textArea = new JTextArea()
@@ -29,29 +28,17 @@ class Win1 extends JFrame {
     
     // TODO: there's no distinctUntilChanged() operation yet in RxJava
     
-    // TODO: throttle is not yet in Scala adapter
-    val slower = input.sample(1000 millis)
+    // TODO: throttle is not yet in RxJava (https://github.com/Netflix/RxJava/pull/368)
     
-    slower.subscribe((s: String) => println(s))
+    val slowerAndLess = input.sample(1000 millis).take(5)
     
-//                var input = (from evt in Observable.FromEventPattern<EventArgs>(txt, "TextChanged")
-//                         select ((TextBox)evt.Sender).Text)
-//                        .Throttle(TimeSpan.FromSeconds(1))
-//                        .DistinctUntilChanged()
-//                        .Do(x => Console.WriteLine(x));
-//
-
-//            //nicer:
-//            var res = (from term in input
-//                       select matchInWordNetByPrefix(term))
-//                      .Switch();
-//
-//            using (res.ObserveOn(lst).Subscribe(
-//                words => {
-//                    lst.Items.Clear();
-//                    lst.Items.AddRange((from word in words select word.Word).ToArray());
-//                },
-//                ex => { Console.WriteLine(ex.Message); }
+    slowerAndLess.subscribe((s: String) => println(s))
+    
+    slowerAndLess.observeOn(rx.concurrency.Schedulers.threadPoolForIO()).map(
+        (s: String) => LookupInWordNet.matchPrefixInWordNet(s)
+    ).observeOn(SwingScheduler.getInstance()).subscribe(
+        (matches: Seq[String]) => {textArea.setText(matches.mkString("\n"))}
+    )
     
   }
    
