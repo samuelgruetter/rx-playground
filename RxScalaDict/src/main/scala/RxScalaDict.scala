@@ -22,22 +22,25 @@ class Win1 extends JFrame {
   def run = {
     initLayout
     
+    ThreadLogger.log("Win1.run")
+    
     // wrapping from Java Observable to Scala Observable because there is no RxScalaSwing adapter yet
     val input = for (event <- new Observable(SwingObservable.fromKeyEvents(textField))) yield 
       event.getComponent().asInstanceOf[JTextField].getText()
     
     // TODO: there's no distinctUntilChanged() operation yet in RxJava
     
-    // TODO: throttle is not yet in RxJava (https://github.com/Netflix/RxJava/pull/368)
+    val throttled = input.throttleWithTimeout(1000 millis)
+        
+    throttled.subscribe((s: String) => println(s))
     
-    val slowerAndLess = input.sample(1000 millis).take(5)
-    
-    slowerAndLess.subscribe((s: String) => println(s))
-    
-    slowerAndLess.observeOn(rx.concurrency.Schedulers.threadPoolForIO()).map(
+    throttled.observeOn(rx.concurrency.Schedulers.threadPoolForIO()).map(
         (s: String) => LookupInWordNet.matchPrefixInWordNet(s)
     ).observeOn(SwingScheduler.getInstance()).subscribe(
-        (matches: Seq[String]) => {textArea.setText(matches.mkString("\n"))}
+        (matches: Seq[String]) => {
+          ThreadLogger.log("updating text in textArea")
+          textArea.setText(matches.mkString("\n"))
+        }
     )
     
   }

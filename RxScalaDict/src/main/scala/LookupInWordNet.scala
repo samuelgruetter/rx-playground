@@ -28,6 +28,8 @@ object LookupInWordNet {
   }
   
   def matchPrefixInWordNet(prefix: String): Seq[String] = {
+    ThreadLogger.log("blocking lookup operations")
+    
     val session = new DictSession("dict.org")
     session.open("test client");
     try {
