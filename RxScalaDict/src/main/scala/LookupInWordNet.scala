@@ -40,7 +40,5 @@ object LookupInWordNet {
       println("matchPrefixInWordNet closed its session")
     }
   }
-  
-  
 
 }

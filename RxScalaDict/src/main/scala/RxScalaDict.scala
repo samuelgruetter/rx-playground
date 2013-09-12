@@ -1,8 +1,4 @@
 
-/*
- * Note: Could also use scala.swing wrappers, but they don't seem to be very actively developed...
- */
-
 import javax.swing.JFrame
 import javax.swing.JTextField
 import javax.swing.JTextArea
@@ -24,20 +20,22 @@ class Win1 extends JFrame {
     
     ThreadLogger.log("Win1.run")
     
-    // wrapping from Java Observable to Scala Observable because there is no RxScalaSwing adapter yet
-    val input = for (event <- new Observable(SwingObservable.fromKeyEvents(textField))) yield 
+    // convert Java observable returned by fromKeyEvents into Scala Observable:
+    val keyEvents = Observable(SwingObservable.fromKeyEvents(textField))
+    
+    val input = for (event <- keyEvents) yield 
       event.getComponent().asInstanceOf[JTextField].getText()
     
     // TODO: there's no distinctUntilChanged() operation yet in RxJava
     
-    val throttled = input.throttleWithTimeout(1000 millis)
+    val throttled = input.filter(_.length >= 2).throttleWithTimeout(1000 millis)
         
-    throttled.subscribe((s: String) => println(s))
+    throttled.subscribe(println(_))
     
     throttled.observeOn(rx.concurrency.Schedulers.threadPoolForIO()).map(
-        (s: String) => LookupInWordNet.matchPrefixInWordNet(s)
-    ).observeOn(SwingScheduler.getInstance()).subscribe(
-        (matches: Seq[String]) => {
+        LookupInWordNet.matchPrefixInWordNet(_)
+    ).observeOn(SwingScheduler.getInstance).subscribe(
+        matches => {
           ThreadLogger.log("updating text in textArea")
           textArea.setText(matches.mkString("\n"))
         }
@@ -56,16 +54,6 @@ class Win1 extends JFrame {
 
 	setVisible(true)
 	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-  }
-  
-  def test1 = {
-    println("Hello world")
-    
-    Observable(1 to 10).subscribe((i: Int) => println(i))
-    
-    for (s <- LookupInWordNet.matchPrefixInWordNet("wall")) {
-      println(s)
-    }
   }
   
 }
