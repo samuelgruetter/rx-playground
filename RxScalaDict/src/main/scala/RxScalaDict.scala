@@ -26,9 +26,7 @@ class Win1 extends JFrame {
     val input = for (event <- keyEvents) yield 
       event.getComponent().asInstanceOf[JTextField].getText()
     
-    // TODO: there's no distinctUntilChanged() operation yet in RxJava
-    
-    val throttled = input.filter(_.length >= 2).throttleWithTimeout(1000 millis)
+    val throttled = input.distinctUntilChanged.filter(_.length >= 2).throttleWithTimeout(500 millis)
         
     throttled.subscribe(println(_))
     
