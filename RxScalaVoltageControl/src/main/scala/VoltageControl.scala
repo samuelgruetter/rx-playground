@@ -8,6 +8,7 @@ import javax.swing.JScrollPane
 import scala.language.postfixOps
 import scala.concurrent.duration._
 import rx.lang.scala.Observable
+import rx.lang.scala.Observer
 import rx.observables.SwingObservable
 import rx.concurrency.SwingScheduler
 import javax.swing.JSlider
@@ -15,49 +16,68 @@ import javax.swing.JComboBox
 import javax.swing.JPanel
 import javax.swing.JLabel
 import javax.swing.event.ChangeEvent
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import javax.swing.event.ChangeListener
 
-// TODO add unit to output
-// case class VoltageSetting(value: Int, unit: String)
+case class VoltageSetting(value: Int, unit: String) {
+  override def toString = s"VoltageSetting($value $unit)"
+}
 
 class Win1 extends JFrame {
   
   val voltageSlider = createTickSlider(0, 1000)
-  //val unitCB = new JComboBox[String]
+  val unitCB = new JComboBox[String]
   val periodSlider = createTickSlider(100, 1100)
   
   def changeEventToSliderValue(e: ChangeEvent): Int = {
     e.getSource().asInstanceOf[JSlider].getValue()
   }
   
+  def actionEventToCbValue(e: ActionEvent): String = {
+    e.getSource().asInstanceOf[JComboBox[String]].getSelectedItem().asInstanceOf[String]
+  }
+  
   def run = {
     initLayout
     
-    // Note: fromChangeEvents is not yet in Netflix RxJava
-    val voltageSliderEventsJava = SwingObservable.fromChangeEvents(voltageSlider)
-    val periodSliderEventsJava = SwingObservable.fromChangeEvents(periodSlider)
-    
-    // Convert Java observable into Scala Observable:
-    val voltageSliderEvents = Observable(voltageSliderEventsJava)
-    val periodSliderEvents = Observable(periodSliderEventsJava)
+    val voltageSliderEvents = SwingSource.fromChangeEventsOf(voltageSlider)
+    val periodSliderEvents = SwingSource.fromChangeEventsOf(periodSlider)
+    val unitEvents = SwingSource.fromActionEventsOf(unitCB)
     
     // Turn the Observable[ChangeEvent] into an Observable[Int] emitting the slider values
     val voltageSliderValues = voltageSliderEvents.map(changeEventToSliderValue(_))
     val periodSliderValues = periodSliderEvents.map(changeEventToSliderValue(_))
+    val unitValues = unitEvents.map(actionEventToCbValue(_))
     
     // When the period slider has kept the same value for 200ms, we believe that the user
     // has made a choice and that it's worth changing the sampling rate
     val changePeriod = periodSliderValues.distinctUntilChanged.throttleWithTimeout(200.millis)
     
-    val sampled = changePeriod.map((period: Int) => voltageSliderValues.sample(period.millis)).switch
+    val sampled = changePeriod.map((period: Int) => {
+      // Make sure that `sample` has a start value (current value of voltage slider):
+      (Observable(voltageSlider.getValue) ++ voltageSliderValues).sample(period.millis)
+    }).switch
     
-    val t0 = System.currentTimeMillis()
+    val withUnit = (for ((voltage, unit) <- sampled.combineLatest(unitValues)) 
+                        yield VoltageSetting(voltage, unit))
     
-    sampled.subscribe(v => println(s"$v at t=${System.currentTimeMillis()-t0}"))
+    val subscription = withUnit.subscribe(v => println(v))
         
-    // We set the sliders' start values only now, because we want the start value to appear
+    // We set the start values only now, because we want the start value to appear
     // in the Observables
     setSlidersStartValue(voltageSlider)
     setSlidersStartValue(periodSlider)
+    unitCB.setSelectedItem("mV")
+    
+    addWindowListener(new WindowAdapter() {
+      override def windowClosing(e: WindowEvent) {
+        subscription.unsubscribe()
+        System.exit(0)
+      }
+    })
   }
   
   def setSlidersStartValue(s: JSlider) { 
@@ -79,15 +99,14 @@ class Win1 extends JFrame {
         
 	setLayout(new BorderLayout(12, 12))
 		
-	//unitCB.addItem("V")
-	//unitCB.addItem("mV")
+	unitCB.addItem("V")
+	unitCB.addItem("mV")
 	
 	val upperPanel = new JPanel
 	upperPanel.setLayout(new BorderLayout(12, 12))
 	upperPanel.add(new JLabel("Voltage:"), BorderLayout.WEST)
 	upperPanel.add(voltageSlider, BorderLayout.CENTER)
-	//upperPanel.add(unitCB, BorderLayout.EAST)
-	upperPanel.add(new JLabel("mV"), BorderLayout.EAST)
+	upperPanel.add(unitCB, BorderLayout.EAST)
 	add(upperPanel, BorderLayout.NORTH)
 	
 	val lowerPanel = new JPanel
@@ -100,8 +119,47 @@ class Win1 extends JFrame {
 	setSize(800, 150)
 
 	setVisible(true)
-	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
   }
+  
+}
+
+// {ComboBox ActionEvents => Observable[ActionEvent]} and {JSlider ChangeEvents => Observable[ChangeEvent]}
+// is not yet in SwingObservable, so we implement it ourselves:
+object SwingSource {
+  
+  def fromActionEventsOf(cb: JComboBox[String]): Observable[ActionEvent] = Observable(
+    (observer: Observer[ActionEvent]) => {
+      val listener = new ActionListener() {
+        def actionPerformed(event: ActionEvent) {
+          observer.onNext(event)
+        }
+      }
+      cb.addActionListener(listener)
+      // TODO this do this the Scala way:
+      rx.subscriptions.Subscriptions.create(new rx.util.functions.Action0() {
+        def call() {
+          cb.removeActionListener(listener)
+        }
+      })
+    }
+  )
+  
+  def fromChangeEventsOf(slider: JSlider): Observable[ChangeEvent] = Observable(
+    (observer: Observer[ChangeEvent]) => {
+      val listener = new ChangeListener() {
+        def stateChanged(event: ChangeEvent) {
+          observer.onNext(event)
+        }
+      }
+      slider.addChangeListener(listener)
+      // TODO this do this the Scala way:
+      rx.subscriptions.Subscriptions.create(new rx.util.functions.Action0() {
+        def call() {
+          slider.removeChangeListener(listener)
+        }
+      })
+    }
+  )
   
 }
 
