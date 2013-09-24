@@ -1,26 +1,23 @@
 
-import javax.swing.JFrame
-import javax.swing.JTextField
-import javax.swing.JTextArea
-import javax.swing.BorderFactory
 import java.awt.BorderLayout
-import javax.swing.JScrollPane
-import scala.language.postfixOps
-import scala.concurrent.duration._
-import rx.lang.scala.Observable
-import rx.lang.scala.Observer
-import rx.observables.SwingObservable
-import rx.concurrency.SwingScheduler
-import javax.swing.JSlider
-import javax.swing.JComboBox
-import javax.swing.JPanel
-import javax.swing.JLabel
-import javax.swing.event.ChangeEvent
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
+
+import javax.swing.BorderFactory
+import javax.swing.JComboBox
+import javax.swing.JFrame
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JSlider
+import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
+import rx.lang.scala.Observable
+import rx.lang.scala.Observer
 
 case class VoltageSetting(value: Int, unit: String) {
   override def toString = s"VoltageSetting($value $unit)"
