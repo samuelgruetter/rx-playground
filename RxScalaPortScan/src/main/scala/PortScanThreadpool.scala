@@ -24,16 +24,17 @@ object PortScanThreadPool extends App {
     case e: Exception => Closed(port)
   }
 
-  Observable(1 to 65536).flatMap(
-    port => Observable(port).observeOn(Schedulers.threadPoolForIO).map(scanPort(_))
-  ).subscribe(
-    res => res match {
+  Observable(1 to 65536)
+    .flatMap(port => Observable(port).observeOn(Schedulers.threadPoolForIO).map(scanPort(_)))
+    // convert to blocking because otherwise app may terminate before all threads of 
+    // Schedulers.threadPoolForIO have completed their work (these threads are daemons)
+    .toBlockingObservable
+    .foreach(res => res match {
       case y: Open =>
         println("Port " + y.s.getPort + " is open")
         y.s.close
       case y: Closed =>
-    },
-    err => err.printStackTrace(),
-    () => println("Done.")
-  )
+    })
+  println("Done.")
+  
 }
