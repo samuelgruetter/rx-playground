@@ -3,10 +3,8 @@ import java.awt.Color
 import java.awt.Graphics
 import java.awt.event.MouseEvent
 import java.io.File
-
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
-
 import javax.imageio.ImageIO
 import javax.swing.BorderFactory
 import javax.swing.JFrame
@@ -15,6 +13,7 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import rx.lang.scala.Observable
 import rx.observables.SwingObservable
+import rx.lang.scala.JavaConversions
 
 class Win1 extends JFrame {
 
@@ -25,10 +24,10 @@ class Win1 extends JFrame {
     initLayout
 
     // Events for: mouse button is pressed/released/clicked, mouse enters/leaves imgDisplay
-    val mouseActions = Observable(SwingObservable.fromMouseEvents(imgDisplay))
+    val mouseActions = JavaConversions.toScalaObservable(SwingObservable.fromMouseEvents(imgDisplay))
 
     // Events for: mouse is moved
-    val mouseMoves = Observable(SwingObservable.fromMouseMotionEvents(imgDisplay))
+    val mouseMoves = JavaConversions.toScalaObservable(SwingObservable.fromMouseMotionEvents(imgDisplay))
 
     val mouseEvents = mouseActions merge mouseMoves
 

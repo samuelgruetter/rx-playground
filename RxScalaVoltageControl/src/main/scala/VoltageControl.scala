@@ -54,7 +54,7 @@ class Win1 extends JFrame {
     
     val sampled = changePeriod.map((period: Int) => {
       // Make sure that `sample` has a start value (current value of voltage slider):
-      (Observable(voltageSlider.getValue) ++ voltageSliderValues).sample(period.millis)
+      (Observable.items(voltageSlider.getValue) ++ voltageSliderValues).sample(period.millis)
     }).switch
     
     val withUnit = (for ((voltage, unit) <- sampled.combineLatest(unitValues)) 
@@ -123,7 +123,7 @@ class Win1 extends JFrame {
 // is not yet in SwingObservable, so we implement it ourselves:
 object SwingSource {
   
-  def fromActionEventsOf(cb: JComboBox[String]): Observable[ActionEvent] = Observable(
+  def fromActionEventsOf(cb: JComboBox[String]): Observable[ActionEvent] = Observable.create(
     (observer: Observer[ActionEvent]) => {
       val listener = new ActionListener() {
         def actionPerformed(event: ActionEvent) {
@@ -132,12 +132,12 @@ object SwingSource {
       }
       cb.addActionListener(listener)
       new Subscription {
-        def unsubscribe: Unit = cb.removeActionListener(listener)
+        override def unsubscribe: Unit = cb.removeActionListener(listener)
       }
     }
   )
   
-  def fromChangeEventsOf(slider: JSlider): Observable[ChangeEvent] = Observable(
+  def fromChangeEventsOf(slider: JSlider): Observable[ChangeEvent] = Observable.create(
     (observer: Observer[ChangeEvent]) => {
       val listener = new ChangeListener() {
         def stateChanged(event: ChangeEvent) {
@@ -146,7 +146,7 @@ object SwingSource {
       }
       slider.addChangeListener(listener)
       new Subscription {
-        def unsubscribe: Unit = slider.removeChangeListener(listener)
+       override def unsubscribe: Unit = slider.removeChangeListener(listener)
       }
     }
   )

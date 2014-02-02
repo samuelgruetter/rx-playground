@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.10.2"
 
-val rxVersion = "0.14.1"
+val rxVersion = "0.16.1"
 
 libraryDependencies ++= Seq(
 	"com.netflix.rxjava" % "rxjava-core"  % rxVersion ,
