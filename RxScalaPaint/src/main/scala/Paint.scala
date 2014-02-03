@@ -6,13 +6,14 @@ import java.awt.Image
 import java.awt.RenderingHints
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
-
 import javax.swing.JComponent
 import javax.swing.JFrame
 import rx.lang.scala.Observable
 import rx.lang.scala.Observer
 import rx.lang.scala.Subscription
 import rx.observables.SwingObservable
+import rx.lang.scala.JavaConversions
+
 
 case class Line(x1: Int, y1: Int, x2: Int, y2: Int)
 
@@ -23,7 +24,7 @@ class Win1 extends JFrame {
   def run = {
     initLayout
     
-    val mouseMoveEvents = Observable(SwingObservable.fromMouseMotionEvents(drawPad))
+    val mouseMoveEvents = JavaConversions.toScalaObservable(SwingObservable.fromMouseMotionEvents(drawPad))
     
     val lines = for (Seq(e1, e2) <- mouseMoveEvents.buffer(2, 1)) 
           yield Line(e1.getX(), e1.getY(), e2.getX(), e2.getY())
@@ -32,7 +33,7 @@ class Win1 extends JFrame {
     val mouseDown = MouseEventSource.mouseButtonDown(drawPad, 1)
     
     // Paint if the mouse is down
-    val paint = mouseDown.map(if (_) lines else Observable()).switch
+    val paint = mouseDown.map(if (_) lines else Observable.empty).switch
     
     paint.subscribe(drawPad.drawLine(_))    
   }
@@ -84,7 +85,7 @@ object MouseEventSource {
    * @returns an Observable that emits true when mouse button {@code buttonId} goes down and
    *          false when it goes up
    */
-  def mouseButtonDown(comp: JComponent, buttonId: Int) : Observable[Boolean] = Observable(
+  def mouseButtonDown(comp: JComponent, buttonId: Int) : Observable[Boolean] = Observable.create(
     (observer: Observer[Boolean]) => {
       val listener = new MouseListener() {
         def mouseClicked(e: MouseEvent): Unit = {}
@@ -99,7 +100,7 @@ object MouseEventSource {
       }
       comp.addMouseListener(listener)
       new Subscription {
-        def unsubscribe: Unit = comp.removeMouseListener(listener)
+        override def unsubscribe: Unit = comp.removeMouseListener(listener)
       }
     }
   )

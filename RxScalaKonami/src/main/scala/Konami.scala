@@ -1,12 +1,12 @@
 
 import java.awt.BorderLayout
 import java.awt.event.KeyEvent
-
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.SwingConstants
 import rx.lang.scala.Observable
 import rx.observables.SwingObservable
+import rx.lang.scala.JavaConversions
 
 
 class Win1 extends JFrame {
@@ -15,7 +15,7 @@ class Win1 extends JFrame {
   def run = {
     initLayout
     
-    val konami = Observable(
+    val konami = Observable.items(
         38, // up
         38, // up
         40, // down
@@ -28,13 +28,13 @@ class Win1 extends JFrame {
         65  // a
     )
     
-    val pressedKeys = Observable(SwingObservable.fromKeyEvents(this))
+    val pressedKeys = JavaConversions.toScalaObservable(SwingObservable.fromKeyEvents(this))
                         .filter(_.getID() == KeyEvent.KEY_RELEASED)
                         .map(_.getKeyCode())
     
     val bingo = pressedKeys.window(10, 1)
                   .flatMap(window => (window zip konami).forall(p => p._1 == p._2))
-                  .filter(b => b)
+                  .filter(identity)
     
     bingo.subscribe(_ => label.setText(label.getText() + " KONAMI "))
   }

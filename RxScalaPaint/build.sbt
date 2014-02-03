@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.10.2"
 
-val rxVersion = "0.14.1"
+val rxVersion = "0.16.1"
 
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
