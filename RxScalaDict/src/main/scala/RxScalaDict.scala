@@ -1,9 +1,7 @@
 
 import java.awt.BorderLayout
-
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
-
 import javax.swing.BorderFactory
 import javax.swing.JFrame
 import javax.swing.JScrollPane
@@ -12,8 +10,9 @@ import javax.swing.JTextField
 import rx.concurrency.SwingScheduler
 import rx.lang.scala.Observable
 import rx.lang.scala.Scheduler
-import rx.lang.scala.concurrency.Schedulers
+import rx.lang.scala.schedulers._
 import rx.observables.SwingObservable
+import rx.lang.scala.JavaConversions
 
 class Win1 extends JFrame {
   val textArea = new JTextArea()
@@ -25,7 +24,7 @@ class Win1 extends JFrame {
     ThreadLogger.log("Win1.run")
     
     // convert Java observable returned by fromKeyEvents into Scala Observable:
-    val keyEvents = Observable(SwingObservable.fromKeyEvents(textField))
+    val keyEvents = JavaConversions.toScalaObservable(SwingObservable.fromKeyEvents(textField))
     
     val input = for (event <- keyEvents) yield 
       event.getComponent().asInstanceOf[JTextField].getText()
@@ -34,11 +33,11 @@ class Win1 extends JFrame {
         
     throttled.subscribe(println(_))
     
-    throttled.observeOn(Schedulers.threadPoolForIO).map(
+    throttled.observeOn(ThreadPoolForIOScheduler()).map(
         LookupInWordNet.matchPrefixInWordNet(_)
     // for SwingScheduler, there is no Scala Wrapper yet, so we have to convert explicitly
     // from Java Scheduler to Scala Scheduler:
-    ).observeOn(Scheduler(SwingScheduler.getInstance)).subscribe(
+    ).observeOn(new Scheduler{ val asJavaScheduler = SwingScheduler.getInstance}).subscribe(
         matches => {
           ThreadLogger.log("updating text in textArea")
           textArea.setText(matches.mkString("\n"))

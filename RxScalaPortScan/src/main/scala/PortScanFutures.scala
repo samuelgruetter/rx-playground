@@ -5,13 +5,14 @@
 // Modified by @samuelgruetter
 
 import java.net.Socket
-import rx.subscriptions.Subscriptions
 import rx.lang.scala.Observable
 import scala.concurrent.{Future, future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import java.util.concurrent.Executors
 import scala.concurrent.ExecutionContext
+import rx.subscriptions.Subscriptions
+import rx.lang.scala.Subscription
 
 // Port scanning results
 trait Result
@@ -32,7 +33,7 @@ object PortScanFutures extends App {
   // Without this line, the app terminates before all open ports are printed!
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
  
-  Observable(1 to 65536).flatMap(port =>
+  Observable.from(1 to 65536).flatMap(port =>
     future {
       try {
         Open(new Socket(host, port))
@@ -62,7 +63,7 @@ object FutureExtensions {
   class ObservableFuture[T](f: Future[T]) {
  
     def asObservable: Observable[T] = {
-      Observable((o: Observer[T]) => {
+      Observable.create((o: Observer[T]) => {
         f.onComplete {
           t => t match {
             case Success(s) =>
@@ -72,7 +73,7 @@ object FutureExtensions {
               o.onError(new Exception(s))
           }
         }
-        Subscriptions.empty
+        Subscription()
       })
     }
   }
