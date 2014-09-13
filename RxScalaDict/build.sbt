@@ -14,3 +14,5 @@ libraryDependencies ++= Seq(
 
 // also depends on dict4j.jar from http://dict4j.sourceforge.net/, which is in ./lib
 
+scalacOptions ++= Seq("-deprecation", "-feature")
+

@@ -7,3 +7,5 @@ libraryDependencies ++= Seq(
 )
 
 
+scalacOptions ++= Seq("-deprecation", "-feature")
+
