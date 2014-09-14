@@ -8,4 +8,5 @@ target/
 
 # you can create the eclipse project file by running `sbt eclipse`
 .project
+.settings
 
