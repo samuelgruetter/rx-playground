@@ -2,9 +2,9 @@ name := "RxScalaPaint"
 
 version := "1.0"
 
-scalaVersion := "2.10.+"
+scalaVersion := "2.10.4"
 
-val rxVersion = "0.20.+"
+val rxVersion = "0.20.4"
 
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 

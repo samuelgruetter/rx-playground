@@ -2,7 +2,7 @@ name := "ScalaImplicitsProblem"
 
 version := "1.0"
 
-scalaVersion := "2.10.+"
+scalaVersion := "2.10.4"
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
