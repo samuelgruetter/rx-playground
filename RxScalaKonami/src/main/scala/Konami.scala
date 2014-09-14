@@ -15,7 +15,7 @@ class Win1 extends JFrame {
   def run = {
     initLayout
     
-    val konami = Observable.items(
+    val konami = Observable.just(
         38, // up
         38, // up
         40, // down
@@ -32,7 +32,7 @@ class Win1 extends JFrame {
                         .filter(_.getID() == KeyEvent.KEY_RELEASED)
                         .map(_.getKeyCode())
     
-    val bingo = pressedKeys.window(10, 1)
+    val bingo = pressedKeys.sliding(10, 1)
                   .flatMap(window => (window zip konami).forall(p => p._1 == p._2))
                   .filter(identity)
     

@@ -1,4 +1,6 @@
 
+import scala.language.implicitConversions
+
 object ScalaImplicitsProblem {
   
   // The Java library (here implemented in Scala for simplicity).

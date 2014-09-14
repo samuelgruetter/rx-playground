@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import rx.util.functions.Func1;
+import rx.functions.Func1;
 
 public class CovariancePlayground {
 

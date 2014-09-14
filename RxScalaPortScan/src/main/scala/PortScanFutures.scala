@@ -14,6 +14,8 @@ import scala.concurrent.ExecutionContext
 import rx.subscriptions.Subscriptions
 import rx.lang.scala.Subscription
 
+import scala.language.implicitConversions
+
 // Port scanning results
 trait Result
 case class Open(s: Socket) extends Result

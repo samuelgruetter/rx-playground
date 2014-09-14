@@ -54,7 +54,7 @@ class Win1 extends JFrame {
     
     val sampled = changePeriod.map((period: Int) => {
       // Make sure that `sample` has a start value (current value of voltage slider):
-      (Observable.items(voltageSlider.getValue) ++ voltageSliderValues).sample(period.millis)
+      (Observable.just(voltageSlider.getValue) ++ voltageSliderValues).sample(period.millis)
     }).switch
     
     val withUnit = (for ((voltage, unit) <- sampled.combineLatest(unitValues)) 

@@ -15,6 +15,8 @@ import rx.lang.scala.Observable
 import rx.observables.SwingObservable
 import rx.lang.scala.JavaConversions
 
+import scala.language.implicitConversions
+
 class Win1 extends JFrame {
 
   val imgDisplay = new ImgDisplay("logo.png")

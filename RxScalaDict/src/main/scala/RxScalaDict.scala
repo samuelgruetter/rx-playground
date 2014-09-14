@@ -7,7 +7,7 @@ import javax.swing.JFrame
 import javax.swing.JScrollPane
 import javax.swing.JTextArea
 import javax.swing.JTextField
-import rx.concurrency.SwingScheduler
+import rx.schedulers.SwingScheduler
 import rx.lang.scala.Observable
 import rx.lang.scala.Scheduler
 import rx.lang.scala.schedulers._
@@ -33,7 +33,7 @@ class Win1 extends JFrame {
         
     throttled.subscribe(println(_))
     
-    throttled.observeOn(ThreadPoolForIOScheduler()).map(
+    throttled.observeOn(IOScheduler()).map(
         LookupInWordNet.matchPrefixInWordNet(_)
     // for SwingScheduler, there is no Scala Wrapper yet, so we have to convert explicitly
     // from Java Scheduler to Scala Scheduler:

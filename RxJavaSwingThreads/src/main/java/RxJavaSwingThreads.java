@@ -12,12 +12,10 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import rx.Observable;
-import rx.Scheduler;
-import rx.concurrency.Schedulers;
-import rx.concurrency.SwingScheduler;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.observables.SwingObservable;
-import rx.util.functions.Action1;
-import rx.util.functions.Func1;
+import rx.schedulers.SwingScheduler;
 
 /*
  * we have 3 threads in this app:
@@ -33,7 +31,7 @@ public class RxJavaSwingThreads extends JFrame {
 	private JTextArea textArea;
 	
 	// approx. count of seconds since app startup
-	Observable<Long> seconds = MyObservable.interval(1, TimeUnit.SECONDS);
+	Observable<Long> seconds = Observable.interval(1, TimeUnit.SECONDS);
 	
 	// all key Events of textField
 	Observable<KeyEvent> keyEvents;
@@ -91,25 +89,6 @@ public class RxJavaSwingThreads extends JFrame {
 			}
 		});
 
-		// Subscription 4 (producing unexpected behavior)
-		// clumsy try to get callbacks run on event dispatch thread, does not work, not sure if bug
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				checkOnUiThread("subscribe-to-seconds");
-				// we're indeed on the UI thread
-				
-				// so Schedulers.currentThread() must "represent" the UI thread
-				Scheduler schedulerOfEventDispatchThread = Schedulers.currentThread();
-				
-				seconds.observeOn(schedulerOfEventDispatchThread).subscribe(new Action1<Long>() {
-					public void call(Long n) {
-						// BUT this test fails! (i.e. it prints "BAD") Why? Where's the problem?
-						checkOnUiThread("title-changing-MySubscriptions-deactivated");
-						//RxSwing2.this.setTitle("t = " + n + " seconds");				
-					}
-				});
-			}		
-		});
 	}
 	
 	// Logging/Checking:
@@ -162,7 +141,7 @@ public class RxJavaSwingThreads extends JFrame {
 		});
 		
 		// System.out can be used from any thread => OK
-		seconds.where(new Func1<Long, Boolean>() {
+		seconds.filter(new Func1<Long, Boolean>() {
 			public Boolean call(Long t1) {
 				return t1 % 2 == 0;
 			}

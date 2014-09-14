@@ -7,7 +7,7 @@ import java.net.Socket
 import scala.language.implicitConversions
 
 import rx.lang.scala.Observable
-import rx.lang.scala.schedulers.ThreadPoolForIOScheduler
+import rx.lang.scala.schedulers.IOScheduler
 
 object PortScanThreadPool extends App {
 
@@ -25,10 +25,10 @@ object PortScanThreadPool extends App {
   }
 
   Observable.from(1 to 65536)
-    .flatMap(port => Observable.items(port).observeOn(ThreadPoolForIOScheduler()).map(scanPort(_)))
+    .flatMap(port => Observable.just(port).observeOn(IOScheduler()).map(scanPort(_)))
     // convert to blocking because otherwise app may terminate before all threads of 
     // Schedulers.threadPoolForIO have completed their work (these threads are daemons)
-    .toBlockingObservable
+    .toBlocking
     .foreach(res => res match {
       case y: Open =>
         println("Port " + y.s.getPort + " is open")

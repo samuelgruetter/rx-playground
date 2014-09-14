@@ -26,7 +26,7 @@ class Win1 extends JFrame {
     
     val mouseMoveEvents = JavaConversions.toScalaObservable(SwingObservable.fromMouseMotionEvents(drawPad))
     
-    val lines = for (Seq(e1, e2) <- mouseMoveEvents.buffer(2, 1)) 
+    val lines = for (Seq(e1, e2) <- mouseMoveEvents.slidingBuffer(2, 1)) 
           yield Line(e1.getX(), e1.getY(), e2.getX(), e2.getY())
 
     // emits true when mouse button 1 goes down, false when it goes up
