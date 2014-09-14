@@ -101,7 +101,14 @@ class Win1 extends JFrame {
   implicit def point2javaAwtPoint(p: Point): java.awt.Point = new java.awt.Point(p.x, p.y)
 }
 
-object Tooltip extends App {  
-  new Win1().run
+object Tooltip {
+  def main(args: Array[String]): Unit = {
+    // Schedule a job for the event-dispatching thread: creating and showing this application's GUI.
+    javax.swing.SwingUtilities.invokeLater(new Runnable {
+      override def run(): Unit = {
+        new Win1().run
+      }
+    });
+  }
 }
 

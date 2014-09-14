@@ -106,7 +106,14 @@ object MouseEventSource {
   )
 }
 
-object Paint extends App {  
-  new Win1().run
+object Paint {  
+  def main(args: Array[String]): Unit = {
+    // Schedule a job for the event-dispatching thread: creating and showing this application's GUI.
+    javax.swing.SwingUtilities.invokeLater(new Runnable {
+      override def run(): Unit = {
+        new Win1().run
+      }
+    });
+  }
 }
 

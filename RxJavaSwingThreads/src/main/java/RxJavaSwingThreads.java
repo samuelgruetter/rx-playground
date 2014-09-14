@@ -38,10 +38,6 @@ public class RxJavaSwingThreads extends JFrame {
 	
 	// all Strings ever present in textField (duplicates because of key down/up)
 	Observable<String> textFieldContents;
-	
-	public static void main(String[] args) {
-		new RxJavaSwingThreads();
-	}
 
 	public RxJavaSwingThreads() {
 		makeLayout();
@@ -53,11 +49,9 @@ public class RxJavaSwingThreads extends JFrame {
 			}
 		});
 		
-		checkNotOnUiThread("constructor");
-		
-		// spams System.out 
-		// subscriptionsTouchingOnlySystemOut();
-		
+		checkOnUiThread("constructor");
+		 
+		subscriptionsTouchingOnlySystemOut();
 		subscriptionsTouchingUi();
 	}
 	
@@ -70,16 +64,16 @@ public class RxJavaSwingThreads extends JFrame {
 				textArea.setText(textArea.getText() + "\n" + s);
 			}
 		});
-		
+
 		// Subscription 2 (bad)
 		// This is BAD because UI is modified on SecondsImpl's thread instead of event dispatching thread!
 		seconds.subscribe(new Action1<Long>() {
 			public void call(Long n) {
 				checkOnUiThread("title-changing-BAD-deactivated");
-				//RxSwing2.this.setTitle("t = " + n);				
+				//RxJavaSwingThreads.this.setTitle("t = " + n + "s");
 			}
 		});
-		
+
 		// Subscription 3 (correct)
 		// The correct way to achieve what we tried above
 		seconds.observeOn(SwingScheduler.getInstance()).subscribe(new Action1<Long>(){
@@ -184,6 +178,15 @@ public class RxJavaSwingThreads extends JFrame {
 			public void mouseClicked(MouseEvent arg0) {}
 		});
 	}
-	
+
+	public static void main(String[] args) {
+		// Schedule a job for the event-dispatching thread: creating and showing
+		// this application's GUI.
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				new RxJavaSwingThreads();
+			}
+		});
+	}
 }
 

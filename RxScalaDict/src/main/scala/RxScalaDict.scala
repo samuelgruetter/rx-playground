@@ -7,7 +7,6 @@ import javax.swing.JFrame
 import javax.swing.JScrollPane
 import javax.swing.JTextArea
 import javax.swing.JTextField
-import rx.schedulers.SwingScheduler
 import rx.lang.scala.Observable
 import rx.lang.scala.Scheduler
 import rx.lang.scala.schedulers._
@@ -30,14 +29,17 @@ class Win1 extends JFrame {
       event.getComponent().asInstanceOf[JTextField].getText()
     
     val throttled = input.distinctUntilChanged.filter(_.length >= 2).throttleWithTimeout(500 millis)
-        
+  
     throttled.subscribe(println(_))
     
-    throttled.observeOn(IOScheduler()).map(
-        LookupInWordNet.matchPrefixInWordNet(_)
-    // for SwingScheduler, there is no Scala Wrapper yet, so we have to convert explicitly
-    // from Java Scheduler to Scala Scheduler:
-    ).observeOn(new Scheduler{ val asJavaScheduler = SwingScheduler.getInstance}).subscribe(
+    throttled
+      // Switch from SwingScheduler to IOScheduler:
+      .observeOn(IOScheduler())
+      // Do IO which might take much time:
+      .map(LookupInWordNet.matchPrefixInWordNet(_))
+      // Switch back from IOScheduler to SwingScheduler:
+      .observeOn(SwingScheduler)
+      .subscribe(
         matches => {
           ThreadLogger.log("updating text in textArea")
           textArea.setText(matches.mkString("\n"))
@@ -54,14 +56,27 @@ class Win1 extends JFrame {
 	add(textField, BorderLayout.NORTH)
 	add(sp, BorderLayout.CENTER)
 	setSize(400, 400)
+	setTitle("RxScalaDict")
 
 	setVisible(true)
 	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
   }
-  
+
+  // For SwingScheduler, there is no Scala Wrapper yet, so we have to convert explicitly
+  // from Java Scheduler to Scala Scheduler:
+  val SwingScheduler: Scheduler = new Scheduler {
+    val asJavaScheduler = rx.schedulers.SwingScheduler.getInstance
+  }
 }
 
-object RxScalaDict extends App {  
-  new Win1().run
+object RxScalaDict {
+  def main(args: Array[String]): Unit = {
+    // Schedule a job for the event-dispatching thread: creating and showing this application's GUI.
+    javax.swing.SwingUtilities.invokeLater(new Runnable {
+      override def run(): Unit = {
+        new Win1().run
+      }
+    });
+  }
 }
 

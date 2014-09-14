@@ -21,7 +21,7 @@ trait Result
 case class Open(s: Socket) extends Result
 case class Closed(port: Int) extends Result
  
-object PortScanFutures extends App {
+object PortScanFutures {
  
   import FutureExtensions._
  
@@ -34,27 +34,26 @@ object PortScanFutures extends App {
   // threads of the thread pool are terminated after being idle for 60 seconds.
   // Without this line, the app terminates before all open ports are printed!
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
- 
-  Observable.from(1 to 65536).flatMap(port =>
-    future {
-      try {
-        Open(new Socket(host, port))
-      } catch {
-        case e: Exception => Closed(port)
-      }
-    }.asObservable
-  ).subscribe(
-    res => res match {
-      case y: Open =>
-        println("Port " + y.s.getPort + " is open")
-        y.s.close
-      case y: Closed =>
-    },
-    err => err.printStackTrace(),
-    () => println("Done.")
-  )
-}
 
+  def main(args: Array[String]): Unit = {
+    Observable.from(1 to 65536).flatMap(port =>
+      future {
+        try {
+          Open(new Socket(host, port))
+        } catch {
+          case e: Exception => Closed(port)
+        }
+      }.asObservable).subscribe(
+      res => res match {
+        case y: Open =>
+          println("Port " + y.s.getPort + " is open")
+          y.s.close
+        case y: Closed =>
+      },
+      err => err.printStackTrace(),
+      () => println("Done."))
+  }
+}
 
 // Extend Future with the asObservable method
 object FutureExtensions {
