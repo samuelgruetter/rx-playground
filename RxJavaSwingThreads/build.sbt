@@ -4,11 +4,10 @@ version := "1.0"
 
 scalaVersion := "2.10.4"
 
+resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+
 libraryDependencies ++= Seq(
-	"com.netflix.rxjava" % "rxjava-core"  % "0.20.4" ,
-	"com.netflix.rxjava" % "rxjava-swing" % "0.20.4"
+   "io.reactivex" % "rxswing" % "0.21.0"
 )
 
-
 scalacOptions ++= Seq("-deprecation", "-feature")
-
