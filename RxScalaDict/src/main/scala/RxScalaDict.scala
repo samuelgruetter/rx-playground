@@ -62,11 +62,11 @@ class Win1 extends JFrame {
 	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
   }
 
-  // For SwingScheduler, there is no Scala Wrapper yet, so we have to convert explicitly
-  // from Java Scheduler to Scala Scheduler:
-  val SwingScheduler: Scheduler = new Scheduler {
-    val asJavaScheduler = rx.schedulers.SwingScheduler.getInstance
-  }
+  // For SwingScheduler, there is no Scala Wrapper yet, but JavaConversions can turn
+  // a Java Scheduler into a Scala Scheduler by an implicit conversion:
+  import rx.lang.scala.JavaConversions._
+  val SwingScheduler: Scheduler = rx.schedulers.SwingScheduler.getInstance
+
 }
 
 object RxScalaDict {
